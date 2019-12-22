@@ -1,0 +1,28 @@
+{
+  "name": "shared-shopping-list-api",
+  "version": "1.0.0",
+  "description": "server side of the shared shopping list app",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/misraturp/shared-shopping-list-api.git"
+  },
+  "author": "Mısra Turp",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/misraturp/shared-shopping-list-api/issues"
+  },
+  "homepage": "https://github.com/misraturp/shared-shopping-list-api#readme",
+  "devDependencies": {
+    "nodemon": "^2.0.1"
+  },
+  "dependencies": {
+    "bcrypt": "^3.0.7",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "knex": "^0.20.4"
+  }
+}

@@ -37,46 +37,97 @@ app.get('/', (req,res)=>{
 })
 
 app.put('/decreaseQuantity', (req,res) => {
-	const { family_name, item } = req.body;
+	const { shopping_list_id, item } = req.body;
+
+	db('items')
+		.where({
+		  shopping_list_id: shopping_list_id,
+		  item:  item
+		})
+		.decrement('quantity', 1)
+		.then(l=>res.json(l))
+		.catch(err => res.status(400).json('error increase item amount'))
 })
 
 app.put('/increaseQuantity', (req,res) => {
-	const { family_name, item } = req.body;
+	const { shopping_list_id, item } = req.body;
+
+	db('items')
+		.where({
+		  shopping_list_id: shopping_list_id,
+		  item:  item
+		})
+		.increment('quantity', 1)
+		.then(l=>res.json(l))
+		.catch(err => res.status(400).json('error increase item amount'))
+
 })
 
-app.put('/removeItem', (req,res) => {
-	const { family_name, item } = req.body;
+app.delete('/removeItem', (req,res) => {
+	const { shopping_list_id, item } = req.body;
+
+	db('items')
+		.where({
+			  shopping_list_id: shopping_list_id,
+			  item:  item
+			})
+		.del()
+		.then(list => res.json(list))
+		.catch(err => res.status(400).json('error removing item frm this shopping list'))
 })
 
-app.put('/addItem', (req,res) => {
-	const { family_name, item } = req.body;
-
-	const its = arr.find(o=>o.familyname.toLowerCase()===family_name.toLowerCase()).itemlist;
-	// const 
-})
-
-app.put('/addShoppingList', (req,res) => {
-	const { family_name, shopping_list_name } = req.body;
-
-	db('shopping_lists').insert
-
-	const its = arr.find(o=>o.familyname.toLowerCase()===family_name.toLowerCase()).itemlist;
-	// const 
-})
 
 app.get('/items', (req,res) => {
-	const { family_name } = req.body;
-    let arr = database;
+	const { shopping_list_id } = req.body;
 
-	if(arr.some(el => el.familyname.toLowerCase() === family_name.toLowerCase())){
-		const its = arr.find(o=>o.familyname.toLowerCase()===family_name.toLowerCase()).itemlist;
-		return res.send(its);
-	}
-	else{
-		res.status(400).json('family not found!')
-	}
+	db.select('item','quantity').from('items')
+		.where('shopping_list_id' , '=' , shopping_list_id)
+		.then(list => res.json(list))
+		.catch(err => res.status(400).json('error getting items for this shopping list'))
+
 })
 
+app.post('/addItem', (req,res) => {
+	const { shopping_list_id, item } = req.body;
+
+	db('items').insert({
+		shopping_list_id:shopping_list_id,
+		item:item,
+		quantity:1
+	})
+	.then(list => res.json('Success!'))
+	.catch(err => res.status(400).json('unable to add item to list'))
+
+})
+
+app.post('/addShoppingList', (req,res) => {
+	const { family_id, shopping_list_name } = req.body;
+
+	db('lists_of_users').insert({
+		shopping_list_name: shopping_list_name,
+		family_id:family_id
+	})
+	.then(result=>res.json('Success!'))
+	.catch(err => res.status(400).json('error adding shopping list'))
+
+})
+
+app.get('/shopping_lists', (req,res) => {
+	const { family_id } = req.body;
+
+	// db('users').join('lists_of_users',{'users.family_id':'lists_of_users.family_id'})
+	// 	.select('shopping_list_name')
+	// 	.where('family_name', '=', family_name)
+	// 	.then(console.log)
+	// 	.then(list => res.json(list))
+	// 	.catch(err => res.status(400).json('error getting shopping lists'))
+
+	db.select('shopping_list_name').from('lists_of_users')
+		.where('family_id' , '=' , family_id)
+		.then(list => res.json(list))
+		.catch(err => res.status(400).json('error getting shopping lists'))
+
+})
 
 app.post('/register', (req,res) => {
 	const { email, family_name, password } = req.body;
@@ -88,6 +139,7 @@ app.post('/register', (req,res) => {
 		const hash = bcrypt.hashSync(password, saltRounds);
 		let family_id = ''
 
+		// TODO: family names that have less then 3 characters!
 		for (var i = 0; i < 3; i++) {
 			family_id = family_id.toString() + Math.floor((Math.random() * 10) + 1).toString() + family_name.charCodeAt(i).toString()
 		}
@@ -109,9 +161,18 @@ app.post('/register', (req,res) => {
 						family_name: family_name,
 						family_id: familyID[0]
 					})
-					.then(user => {
-						res.json(user[0]);
+			})
+			.then(user => {
+				return trx('lists_of_users')
+					.returning('*')
+					.insert({
+						family_id:user[0].family_id,
+						shopping_list_name: 'groceries'
 					})
+
+			})
+			.then(shopping_list => {
+				res.json(shopping_list[0].family_id);
 			})
 			.then(trx.commit)
 			.catch(trx.rollback)
@@ -120,7 +181,6 @@ app.post('/register', (req,res) => {
 
 	}
 });
-
 
 app.post('/signin', (req,res) => {
 	const { family_name, password } = req.body;

@@ -45,7 +45,15 @@ app.put('/decreaseQuantity', (req,res) => {
 		  item:  item
 		})
 		.decrement('quantity', 1)
-		.then(l=>res.json(l))
+		.then(d => {
+			db('items').where({quantity:0}).del().then(l=>console.log(l))
+		})
+		.then(l => {
+			db.select('id','item','quantity').from('items')
+			.where('shopping_list_id' , '=' , shopping_list_id)
+			.then(list => res.json(list))
+		})
+
 		.catch(err => res.status(400).json('error increase item amount'))
 })
 
@@ -58,7 +66,11 @@ app.put('/increaseQuantity', (req,res) => {
 		  item:  item
 		})
 		.increment('quantity', 1)
-		.then(l=>res.json(l))
+		.then(l => {
+			db.select('id','item','quantity').from('items')
+			.where('shopping_list_id' , '=' , shopping_list_id)
+			.then(list => res.json(list))
+		})
 		.catch(err => res.status(400).json('error increase item amount'))
 
 })
@@ -72,15 +84,19 @@ app.delete('/removeItem', (req,res) => {
 			  item:  item
 			})
 		.del()
-		.then(list => res.json(list))
+		.then(l => {
+			db.select('id','item','quantity').from('items')
+			.where('shopping_list_id' , '=' , shopping_list_id)
+			.then(list => res.json(list))
+		})
 		.catch(err => res.status(400).json('error removing item frm this shopping list'))
 })
 
-
-app.get('/items', (req,res) => {
+app.post('/items', (req,res) => {
 	const { shopping_list_id } = req.body;
 
-	db.select('item','quantity').from('items')
+	console.log(shopping_list_id)
+	db.select('id','item','quantity').from('items')
 		.where('shopping_list_id' , '=' , shopping_list_id)
 		.then(list => res.json(list))
 		.catch(err => res.status(400).json('error getting items for this shopping list'))
@@ -95,7 +111,12 @@ app.post('/addItem', (req,res) => {
 		item:item,
 		quantity:1
 	})
-	.then(list => res.json('Success!'))
+	.then(l => {
+		db.select('id','item','quantity').from('items')
+			.where('shopping_list_id' , '=' , shopping_list_id)
+			.then(list => res.json(list))
+
+	})
 	.catch(err => res.status(400).json('unable to add item to list'))
 
 })
@@ -112,7 +133,7 @@ app.post('/addShoppingList', (req,res) => {
 
 })
 
-app.get('/shopping_lists', (req,res) => {
+app.post('/shopping_lists', (req,res) => {
 	const { family_id } = req.body;
 
 	// db('users').join('lists_of_users',{'users.family_id':'lists_of_users.family_id'})
@@ -122,7 +143,7 @@ app.get('/shopping_lists', (req,res) => {
 	// 	.then(list => res.json(list))
 	// 	.catch(err => res.status(400).json('error getting shopping lists'))
 
-	db.select('shopping_list_name').from('lists_of_users')
+	db.select('shopping_list_name','shopping_list_id').from('lists_of_users')
 		.where('family_id' , '=' , family_id)
 		.then(list => res.json(list))
 		.catch(err => res.status(400).json('error getting shopping lists'))
@@ -131,6 +152,7 @@ app.get('/shopping_lists', (req,res) => {
 
 app.post('/register', (req,res) => {
 	const { email, family_name, password } = req.body;
+	console.log(email, family_name, password)
 
 	if(!email || !family_name || !password){
 		return res.status(400).json('incorrect form submission')
@@ -172,7 +194,11 @@ app.post('/register', (req,res) => {
 
 			})
 			.then(shopping_list => {
-				res.json(shopping_list[0].family_id);
+				db.select('*')
+					.from('users')
+					.where('family_id', '=', shopping_list[0].family_id)
+					.then(user=>res.json(user[0]))
+				
 			})
 			.then(trx.commit)
 			.catch(trx.rollback)
@@ -184,6 +210,7 @@ app.post('/register', (req,res) => {
 
 app.post('/signin', (req,res) => {
 	const { family_name, password } = req.body;
+	console.log(family_name)
 
 	if(!family_name || !password){
 		return res.status(400).json('unable to log in!')
@@ -209,8 +236,14 @@ app.post('/signin', (req,res) => {
 			if(isValid){
 				return db.select('*').from('users')
 					.where('email', '=', valid_email)
-					.then(user => {
-						res.json(user[0])
+					.then(user => { res.json(user[0])
+						// db('users')
+						// 	.join('lists_of_users', {'users.family_id': 'lists_of_users.family_id'})
+						// 	.join('items', {'lists_of_users.shopping_list_id': 'items.shopping_list_id'})
+						// 	.select('*')
+						// 	.where('users.family_name', '=', family_name)
+						// 	.then(data => res.json(data))
+						
 					})
 					.catch(err => res.status(400).json('unable to get user'))
 			}
@@ -224,7 +257,7 @@ app.post('/signin', (req,res) => {
 });
 
 
-app.listen(process.env.PORT || 3003, () =>{
+app.listen(process.env.PORT || 3030, () =>{
 	console.log(`app is running on port ${process.env.PORT}`);
 })
 

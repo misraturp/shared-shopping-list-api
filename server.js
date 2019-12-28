@@ -47,11 +47,11 @@ app.put('/decreaseQuantity', (req,res) => {
 		.decrement('quantity', 1)
 		.then(d => {
 			db('items').where({quantity:0}).del().then(l=>console.log(l))
-		})
-		.then(l => {
-			db.select('id','item','quantity').from('items')
-			.where('shopping_list_id' , '=' , shopping_list_id)
-			.then(list => res.json(list))
+			.then(l => {
+				db.select('id','item','quantity').from('items')
+				.where('shopping_list_id' , '=' , shopping_list_id)
+				.then(list => res.json(list))
+			})
 		})
 
 		.catch(err => res.status(400).json('error increase item amount'))

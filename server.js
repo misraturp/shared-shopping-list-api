@@ -48,7 +48,7 @@ app.put('/decreaseQuantity', (req,res) => {
 		.then(d => {
 			db('items').where({quantity:0}).del().then(l=>console.log(l))
 			.then(l => {
-				db.select('id','item','quantity').from('items')
+				db.select('id','item','quantity','done').from('items')
 				.where('shopping_list_id' , '=' , shopping_list_id)
 				.then(list => res.json(list))
 			})
@@ -67,7 +67,7 @@ app.put('/increaseQuantity', (req,res) => {
 		})
 		.increment('quantity', 1)
 		.then(l => {
-			db.select('id','item','quantity').from('items')
+			db.select('id','item','quantity','done').from('items')
 			.where('shopping_list_id' , '=' , shopping_list_id)
 			.then(list => res.json(list))
 		})
@@ -85,18 +85,52 @@ app.delete('/removeItem', (req,res) => {
 			})
 		.del()
 		.then(l => {
-			db.select('id','item','quantity').from('items')
+			db.select('id','item','quantity','done').from('items')
 			.where('shopping_list_id' , '=' , shopping_list_id)
 			.then(list => res.json(list))
 		})
 		.catch(err => res.status(400).json('error removing item frm this shopping list'))
 })
 
+app.put('/doneItem', (req,res) => {
+	const { shopping_list_id, item } = req.body;
+
+	db('items').select('done')
+		.where({
+			  shopping_list_id: shopping_list_id,
+			  item: item
+			})
+		.then(done_value=>{
+			done_value = done_value[0].done;
+			console.log(done_value);
+			if(done_value){
+				return 'false'
+			}else{
+				return 'true'
+			}
+		})
+		.then(value=>
+			db.from('items')
+				.where({
+				  shopping_list_id: shopping_list_id,
+				  item: item
+				})
+				.update({done:value})
+			.then(l => {
+				db.select('id','item','quantity','done').from('items')
+				.where('shopping_list_id' , '=' , shopping_list_id)
+				.then(list => res.json(list))
+			})
+			.catch(err => res.status(400).json('error marking this item as done')))
+
+	
+})
+
 app.post('/items', (req,res) => {
 	const { shopping_list_id } = req.body;
 
-	console.log(shopping_list_id)
-	db.select('id','item','quantity').from('items')
+	// console.log(shopping_list_id)
+	db.select('id','item','quantity','done').from('items')
 		.where('shopping_list_id' , '=' , shopping_list_id)
 		.then(list => res.json(list))
 		.catch(err => res.status(400).json('error getting items for this shopping list'))
@@ -112,7 +146,7 @@ app.post('/addItem', (req,res) => {
 		quantity:1
 	})
 	.then(l => {
-		db.select('id','item','quantity').from('items')
+		db.select('id','item','quantity','done').from('items')
 			.where('shopping_list_id' , '=' , shopping_list_id)
 			.then(list => res.json(list))
 
@@ -128,7 +162,11 @@ app.post('/addShoppingList', (req,res) => {
 		shopping_list_name: shopping_list_name,
 		family_id:family_id
 	})
-	.then(result=>res.json('Success!'))
+	.then(result=>{
+		db.select('shopping_list_name','shopping_list_id').from('lists_of_users')
+		.where('family_id' , '=' , family_id)
+		.then(list => res.json(list))
+	})
 	.catch(err => res.status(400).json('error adding shopping list'))
 
 })
@@ -152,7 +190,7 @@ app.post('/shopping_lists', (req,res) => {
 
 app.post('/register', (req,res) => {
 	const { email, family_name, password } = req.body;
-	console.log(email, family_name, password)
+	// console.log(email, family_name, password)
 
 	if(!email || !family_name || !password){
 		return res.status(400).json('incorrect form submission')
@@ -210,7 +248,7 @@ app.post('/register', (req,res) => {
 
 app.post('/signin', (req,res) => {
 	const { family_name, password } = req.body;
-	console.log(family_name)
+	// console.log(family_name)
 
 	if(!family_name || !password){
 		return res.status(400).json('unable to log in!')

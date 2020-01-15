@@ -4,7 +4,7 @@
   "description": "server side of the shared shopping list app",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon server.js"
+    "start": "node server.js"
   },
   "repository": {
     "type": "git",

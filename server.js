@@ -31,6 +31,7 @@ app.use(cors());
 
 app.get('/', (req,res)=>{
 	console.log('working!')
+	res.send('working!')
 	// db.select('*').from('users')
 	// 	.then(users => {
 	// 		res.send(users)

@@ -231,7 +231,7 @@ app.post('/register', (req,res) => {
 						family_name: family_name,
 						family_id: familyID[0]
 					})
-					.catch(err => res.status(400).json('caught1'))
+					.catch(err => res.status(400).json('error inserting into users table'))
 			})
 			.then(user => {
 				return trx('lists_of_users')
@@ -240,7 +240,7 @@ app.post('/register', (req,res) => {
 						family_id:user[0].family_id,
 						shopping_list_name: 'groceries'
 					})
-					.catch(err => res.status(400).json('caught2'))
+					.catch(err => res.status(400).json('error creating a list for the user'))
 
 			})
 			.then(shopping_list => {
@@ -248,7 +248,7 @@ app.post('/register', (req,res) => {
 					.from('users')
 					.where('family_id', '=', shopping_list[0].family_id)
 					.then(user=>res.json(user[0]))
-					.catch(err => res.status(400).json('caught3'))
+					.catch(err => res.status(400).json('error returning information on the user'))
 				
 			})
 			.then(trx.commit)
@@ -285,7 +285,8 @@ app.post('/signin', (req,res) => {
 			}
 
 			if(isValid){
-				return db.select('*').from('users')
+				return db.select('*')
+					.from('users')
 					.where('email', '=', valid_email)
 					.then(user => { res.json(user[0])
 						// db('users')

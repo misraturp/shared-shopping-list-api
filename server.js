@@ -15,8 +15,8 @@ const database = [{
 const db = require('knex')({
   client: 'pg',
   connection: {
-    host: '127.0.0.1',
-    database: 'shopping_list_db'
+    connectionString: process.env.DATABASE_URL,
+  	ssl: true
   }
 })
 
@@ -209,7 +209,7 @@ app.post('/register', (req,res) => {
 		const hash = bcrypt.hashSync(password, saltRounds);
 		let family_id = ''
 
-		// TODO: family names that have less then 3 characters!
+		// TODO: family names that have less than 3 characters!
 		for (var i = 0; i < 3; i++) {
 			family_id = family_id.toString() + Math.floor((Math.random() * 10) + 1).toString() + family_name.charCodeAt(i).toString()
 		}

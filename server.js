@@ -30,11 +30,20 @@ app.use(cors());
 
 
 app.get('/', (req,res)=>{
-	db.select('*').from('users')
-		.then(users => {
-			res.send(users)
-		});
+	console.log('working!')
+	// db.select('*').from('users')
+	// 	.then(users => {
+	// 		res.send(users)
+	// 	});
 })
+
+
+// app.get('/', (req,res)=>{
+// 	db.select('*').from('users')
+// 		.then(users => {
+// 			res.send(users)
+// 		});
+// })
 
 app.put('/decreaseQuantity', (req,res) => {
 	const { shopping_list_id, item } = req.body;
